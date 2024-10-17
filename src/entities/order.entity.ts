@@ -1,18 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User, Instrument } from './index';
 
-@Entity()
+@Entity({ name: 'orders' })
 export class Order {
     @PrimaryGeneratedColumn()
     id!: number;
 
     @ManyToOne(() => User, user => user.orders)
+    @JoinColumn({ name: 'userid' }) // Especificas el nombre de la columna si es necesario
     user!: User;
 
     @ManyToOne(() => Instrument, instrument => instrument.orders)
     instrument!: Instrument;
 
-    @Column()
+    @Column({ nullable: true })
     side!: string;
 
     @Column('int')
@@ -21,12 +22,12 @@ export class Order {
     @Column('decimal', { precision: 10, scale: 2 })
     price!: number;
 
-    @Column()
+    @Column({ nullable: true })
     type!: string;
 
-    @Column()
+    @Column({ nullable: true })
     status!: string;
 
-    @Column()
+    @Column({ nullable: true })
     datetime!: Date;
 }

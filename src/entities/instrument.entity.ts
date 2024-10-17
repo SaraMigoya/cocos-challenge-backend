@@ -1,23 +1,23 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { User, Order, MarketData } from './index';
+import { Order, MarketData } from './index';
 
-@Entity()
+@Entity({ name: 'instruments' })
 export class Instrument {
+
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column()
+    @Column({ nullable: true })
     ticker!: string;
 
-    @Column()
+    @Column({ nullable: true })
     name!: string;
 
-    @Column()
+    @Column({ nullable: true })
     type!: string;
+
 
     @OneToMany(() => Order, order => order.instrument)
     orders!: Order[];
-
-    @OneToMany(() => MarketData, marketData => marketData.instrument)
-    marketData!: MarketData[];
+    marketData: any;
 }

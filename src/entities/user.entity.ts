@@ -1,15 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Order } from './index';
 
-@Entity()
-export class User {
+@Entity({ name: 'users' }) export class User {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column()
+    @Column({ nullable: true })
     email!: string;
 
-    @Column()
+    @Column({ name: 'accountnumber', nullable: true })
     accountNumber!: string;
 
     @OneToMany(() => Order, order => order.user)
