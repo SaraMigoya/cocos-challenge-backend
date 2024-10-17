@@ -22,7 +22,6 @@ export class MarketData {
     @Column('decimal', { precision: 10, scale: 2 })
     close!: number;
 
-    //@Column({ name: 'accountnumber' })
     @Column('decimal', { precision: 10, scale: 2, name: 'previousclose' },)
     previousClose!: number;
 
