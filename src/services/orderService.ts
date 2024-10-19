@@ -13,7 +13,6 @@ export class OrderService {
             // Iniciar la transacción
             await queryRunner.startTransaction();
 
-            // Verificar si el usuario existe
             const user = await userRepository.findOne({ where: { id: orderData.userId } });
             if (!user) throw new Error('User not found');
 
@@ -24,7 +23,6 @@ export class OrderService {
             });
             if (!marketData) throw new Error('Instrument not found or no recent market data available');
 
-            // Manejo de órdenes tipo MARKET o LIMIT
             let totalCost = 0;
             if (orderData.type === 'MARKET') {
                 // Usar el precio de mercado actual (close)
@@ -38,27 +36,25 @@ export class OrderService {
                 totalCost = orderData.price * orderData.size;
             }
 
-            // Validaciones para órdenes de compra (BUY) 
-            //TODO:
-            // - Mejorar la response de error para el cliente
-            // - Fix bug: no se esta guardando la orden como REJECTED, directamente se rechaza
             if (orderData.side === 'BUY') {
                 const cashAvailable = await this.getCashAvailable(orderData.userId);
                 if (totalCost > cashAvailable) {
                     await this.rejectOrder(queryRunner, orderData, 'Not enough cash to complete the BUY order');
-                    throw new Error('Not enough cash to complete the BUY order');
+
+                    // Confirmar la transacción para que se guarde el REJECTED
+                    await queryRunner.commitTransaction();
+                    return { status: 'REJECTED', message: 'Not enough cash to complete the BUY order' };
+
                 }
             }
 
-            // Validaciones para órdenes de venta (SELL)
-            //TODO: 
-            // - Mejorar la response de error para el cliente
-            // - Fix bug: no se esta guardando la orden como REJECTED, directamente se rechaza
             if (orderData.side === 'SELL') {
                 const totalOwned = await this.getTotalOwned(orderData.userId, orderData.instrumentId);
                 if (orderData.size > totalOwned) {
                     await this.rejectOrder(queryRunner, orderData, 'Not enough assets to complete the SELL order');
-                    throw new Error('Not enough assets to complete the SELL order');
+                    // Confirmar la transacción para que se guarde el REJECTED
+                    await queryRunner.commitTransaction();
+                    return { status: 'REJECTED', message: 'Not enough cash to complete the SELL order' };
                 }
             }
 
