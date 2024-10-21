@@ -16,7 +16,7 @@ describe('Test funcional para enviar una orden', () => {
         await AppDataSource.destroy();
     });
 
-    it('debería crear una orden de tipo MARKET correctamente', async () => {
+    it('debería crear una orden de tipo MARKET (BUY) correctamente', async () => {
         // Crear un usuario de prueba
         const testUser = await UserRepository.save({
             email: 'emiliano@test.com',
@@ -39,6 +39,78 @@ describe('Test funcional para enviar una orden', () => {
         expect(response.body).toHaveProperty('id');
         expect(response.body.status).toBe('FILLED');
     });
+    it('debería crear una orden de tipo MARKET (SELL) correctamente', async () => {
+        // Crear un usuario de prueba
+        const testUser = await UserRepository.save({
+            email: 'emiliano@test.com',
+            accountNumber: '10001',
+            id: 1
+        });
+
+        // Crear una solicitud para enviar una orden de tipo MARKET de venta
+        const response = await request(app)
+            .post('/api/orders')
+            .send({
+                userId: testUser.id,
+                instrumentId: 14,
+                side: 'SELL',
+                type: 'MARKET',
+                size: 54
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toHaveProperty('id');
+        expect(response.body.status).toBe('FILLED');
+    });
+    it('debería crear una orden de tipo LIMIT (BUY) correctamente', async () => {
+        // Crear un usuario de prueba
+        const testUser = await UserRepository.save({
+            email: 'emiliano@test.com',
+            accountNumber: '10001',
+            id: 1
+        });
+
+        // Crear una solicitud para enviar una orden de tipo LIMIT de compra
+        const response = await request(app)
+            .post('/api/orders')
+            .send({
+                userId: testUser.id,
+                instrumentId: 14,
+                side: 'BUY',
+                type: 'LIMIT',
+                size: 100,
+                price: 500
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toHaveProperty('id');
+        expect(response.body.status).toBe('NEW');
+    });
+    it('debería crear una orden de tipo LIMIT (SELL) correctamente', async () => {
+        // Crear un usuario de prueba
+        const testUser = await UserRepository.save({
+            email: 'emiliano@test.com',
+            accountNumber: '10001',
+            id: 1
+        });
+
+        // Crear una solicitud para enviar una orden de tipo LIMIT de venta
+        const response = await request(app)
+            .post('/api/orders')
+            .send({
+                userId: testUser.id,
+                instrumentId: 14,
+                side: 'SELL',
+                type: 'LIMIT',
+                size: 100,
+                price: 500
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toHaveProperty('id');
+        expect(response.body.status).toBe('NEW');
+    });
+
 
     it('debería rechazar una orden si no hay suficiente dinero', async () => {
         const testUser = await UserRepository.save({
