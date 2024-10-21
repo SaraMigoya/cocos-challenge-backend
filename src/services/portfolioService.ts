@@ -1,8 +1,11 @@
 import { MarketData, Order, User } from '../entities/index';
 import { AppDataSource } from '../database/db';
 import { In } from 'typeorm';
+
+//TODO:
+// 1. Crear un paginado que permita obtener los activos(assets) de un usuario en páginas
 export class PortfolioService {
-    static async getPortfolio(userId: number) {
+    static async getPortfolio(userId: number, page: number = 1, pageSize: number = 10) {
         try {
             const userRepository = AppDataSource.getRepository(User);
             const orderRepository = AppDataSource.getRepository(Order);
@@ -10,7 +13,6 @@ export class PortfolioService {
 
             const user = await userRepository.findOne({ where: { id: userId } });
             if (!user) throw new Error('User not found');
-
 
             const orders = await orderRepository.find({
                 where: [
@@ -20,7 +22,6 @@ export class PortfolioService {
                 ],
                 relations: ['instrument'],
             });
-
 
             const cashInTotal = orders
                 .filter(order => order.side === 'CASH_IN')
@@ -32,7 +33,7 @@ export class PortfolioService {
 
             const cashPosition = cashInTotal - cashOutTotal;
 
-            // Filtrar órdenes de activos (no CASH_IN/CASH_OUT)
+            // Filtrar órdenes de activos
             const filledOrders = orders.filter(order => order.side !== 'CASH_IN' && order.side !== 'CASH_OUT');
             let totalAccountValue = cashPosition;
 
@@ -55,7 +56,7 @@ export class PortfolioService {
             // Calcular los activos
             const assets = filledOrders.map(order => {
                 const marketData = marketDataMap.get(order.instrument.id);
-                if (!marketData) return null;  // Omitir si no hay datos de mercado
+                if (!marketData || order.size === 0) return null;
 
                 // Calcular el valor total y rendimiento de la posición
                 const totalValue = order.size * marketData.close;
@@ -74,8 +75,6 @@ export class PortfolioService {
                     dailyReturn: dailyReturn.toFixed(2)
                 };
             }).filter(asset => asset !== null);  // Filtrar nulos
-
-            // Construir el objeto de portafolio
             const portfolio = {
                 totalAccountValue: totalAccountValue,
                 cashPosition: cashPosition,

@@ -1,6 +1,10 @@
 import { QueryRunner } from 'typeorm';
 import { AppDataSource } from '../database/db';
-import { Order, MarketData, User, Instrument } from '../entities/index';
+import { Order, MarketData, User } from '../entities/index';
+
+//TODO:
+//1. Cuando una orden es ejecutada, se tiene que actualizar el listado de posiciones del usuario.
+//2. Cuando una orden es ejecutada, calcular el valor de la cuenta del usuario y los pesos disponibles para operar 
 export class OrderService {
     static async placeOrder(orderData: any) {
         const userRepository = AppDataSource.getRepository(User);
@@ -8,7 +12,6 @@ export class OrderService {
         const marketDataRepository = AppDataSource.getRepository(MarketData);
 
         const queryRunner = AppDataSource.createQueryRunner();
-        console.log('placeOrder:', orderData.instrumentId);
         try {
             // Iniciar la transacción
             await queryRunner.startTransaction();
