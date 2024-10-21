@@ -31,16 +31,25 @@ export class PortfolioService {
                 .filter(order => order.side === 'CASH_OUT')
                 .reduce((sum, order) => sum + order.size * order.price, 0);
 
-            const cashPosition = cashInTotal - cashOutTotal;
 
-            // Filtrar órdenes de activos
+            // Calcular el total de compras y ventas (en efectivo)
+            const buyOrdersTotal = orders
+                .filter(order => order.side === 'BUY' && order.status === 'FILLED')
+                .reduce((sum, order) => sum + order.size * order.price, 0);
+
+            const sellOrdersTotal = orders
+                .filter(order => order.side === 'SELL' && order.status === 'FILLED')
+                .reduce((sum, order) => sum + order.size * order.price, 0);
+
+            // Calcular la posición de efectivo actual
+            const cashPosition = (cashInTotal - cashOutTotal) - buyOrdersTotal + sellOrdersTotal;
+
             const filledOrders = orders.filter(order => order.side !== 'CASH_IN' && order.side !== 'CASH_OUT');
+
             let totalAccountValue = cashPosition;
 
-            // Obtener los IDs de los instrumentos
             const instrumentIds = filledOrders.map(order => order.instrument.id);
 
-            // Consultar datos de mercado para todos los instrumentos relevantes
             const marketDataList = await marketDataRepository.find({
                 where: { instrument: { id: In(instrumentIds) } },
                 relations: ['instrument'],
